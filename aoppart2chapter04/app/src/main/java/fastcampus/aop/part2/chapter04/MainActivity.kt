@@ -5,13 +5,18 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
+import androidx.room.Room
 import fastcampus.aop.part2.chapter04.databinding.ActivityMainBinding
+import fastcampus.aop.part2.chapter04.model.History
+import java.lang.NumberFormatException
 
 class MainActivity : AppCompatActivity() {
 
-    private val binding : ActivityMainBinding by lazy {
+    private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
@@ -23,12 +28,20 @@ class MainActivity : AppCompatActivity() {
         binding.resultTextView
     }
 
+    lateinit var db : AppDatabase
+
     private var isOperator = false
     private var hasOperator = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "historyDB"
+        ).build()
     }
 
     fun buttonClicked(v: View) {
@@ -52,40 +65,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun numberButtonClicked(number: String) {
-        if(isOperator){
+        if (isOperator) {
             expressionTextView.append(" ")
         }
 
         isOperator = false
 
         val expressionText = expressionTextView.text.split(" ")
-        if(expressionText.isNotEmpty() && expressionText.last().length > 15){
+        if (expressionText.isNotEmpty() && expressionText.last().length > 15) {
             Toast.makeText(this, "15 자리 까지만 사용할 수 있습니다.", Toast.LENGTH_SHORT).show()
             return;
-        } else if (expressionText.last().isEmpty() && number == "0"){
+        } else if (expressionText.last().isEmpty() && number == "0") {
             Toast.makeText(this, "0은 제일 앞에 올 수 없습니다.", Toast.LENGTH_SHORT).show()
             return;
         }
 
         expressionTextView.append(number)
+        resultTextView.text = calculateExpression()
 
-        // TODO resultTextView 실시간으로 계산 결과를 넣어야 하는 기능
     }
 
     private fun operatorButtonClicked(operator: String) {
-        if(expressionTextView.text.isEmpty()){
+        if (expressionTextView.text.isEmpty()) {
             return
         }
 
-        when{
+        when {
             isOperator -> {
                 val text = expressionTextView.text.toString()
                 expressionTextView.text = text.dropLast(1) + operator
             }
-            hasOperator ->{
+            hasOperator -> {
                 Toast.makeText(this, "연산자는 한 번 만 사용할 수 있습니다.", Toast.LENGTH_SHORT).show()
                 return;
-            } else ->{
+            }
+            else -> {
                 expressionTextView.append(" $operator")
             }
         }
@@ -103,19 +117,103 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clearButtonClicked(view: View) {
-
-    }
-
-    fun historyButtonClicked(view: View) {
-
+        expressionTextView.text = ""
+        resultTextView.text = ""
+        isOperator = false
+        hasOperator = false
     }
 
     fun resultButtonClicked(view: View) {
+        val expressionTexts = expressionTextView.text.split(" ")
 
+        if(expressionTextView.text.isEmpty() || expressionTexts.size == 1){
+            return
+        }
+
+        if(expressionTexts.size != 3 && hasOperator){
+            Toast.makeText(this,"아직 완성되지 않은 수식입니다.",Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (expressionTexts[0].isNumber().not() || expressionTexts[2].isNumber().not()) {
+            Toast.makeText(this,"오류가 발생했습니다.",Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val expressionText = expressionTextView.text.toString()
+        val resultText = calculateExpression()
+
+        Thread(Runnable {
+            db.historyDao().insertHistory(History(null, expressionText, resultText))
+        }).start()
+
+        resultTextView.text = ""
+        expressionTextView.text = resultText
+
+        isOperator = false
+        hasOperator = false
     }
 
-    private fun calculateExpression() : String {
+    private fun calculateExpression(): String {
+        val expressionTexts = expressionTextView.text.split(" ")
 
+        if (hasOperator.not() || expressionTexts.size != 3) {
+            return ""
+        } else if (expressionTexts[0].isNumber().not() || expressionTexts[2].isNumber().not()) {
+            return ""
+        }
+
+        val exp1 = expressionTexts[0].toBigInteger()
+        val exp2 = expressionTexts[2].toBigInteger()
+        val op = expressionTexts[1]
+
+        return when (op) {
+            "+" -> (exp1 + exp2).toString()
+            "-" -> (exp1 - exp2).toString()
+            "*" -> (exp1 * exp2).toString()
+            "/" -> (exp1 / exp2).toString()
+            "%" -> (exp1 % exp2).toString()
+            else -> ""
+        }
     }
 
+    fun historyButtonClicked(view: View) {
+        binding.historyLayout.visibility = View.VISIBLE
+        binding.historyLinearLayout.removeAllViews()
+
+        Thread(Runnable {
+            db.historyDao().getAll().reversed().forEach {
+                    runOnUiThread {
+                        val historyView = LayoutInflater.from(this).inflate(R.layout.history_row, null, false)
+                        historyView.findViewById<TextView>(R.id.expressionTextView).text = it.expression
+                        historyView.findViewById<TextView>(R.id.resultTextView).text = "= ${it.result}"
+
+                        binding.historyLinearLayout.addView(historyView)
+                    }
+            }
+        }).start()
+    }
+
+    fun closeHistoryButtonClicked(view: View) {
+        binding.historyLayout.visibility = View.GONE
+    }
+
+    fun historyClearButtonCLicked(view: View) {
+        binding.historyLinearLayout.removeAllViews()
+        Thread(Runnable {
+            db.historyDao().deleteAll()
+        })
+
+        binding.historyLayout.visibility = View.GONE
+    }
+}
+
+
+fun String.isNumber(): Boolean {
+    return try {
+        this.toBigInteger()
+        true
+    } catch (e: NumberFormatException) {
+        false
+    }
 }

@@ -6,10 +6,12 @@
         <entry key="..\:/Users/Choi/Desktop/study/Android/fastcampus/part2/aoppart2chapter04/app/src/main/res/drawable/button_background.xml" value="0.314" />
         <entry key="..\:/Users/Choi/Desktop/study/Android/fastcampus/part2/aoppart2chapter04/app/src/main/res/drawable/button_background_green.xml" value="0.314" />
         <entry key="..\:/Users/Choi/Desktop/study/Android/fastcampus/part2/aoppart2chapter04/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/drive1/Development/AndroidProject/FastCampus/aoppart2chapter04/app/src/main/res/layout/activity_main.xml" value="0.2898550724637681" />
+        <entry key="..\:/drive1/Development/AndroidProject/FastCampus/aoppart2chapter04/app/src/main/res/layout/history_row.xml" value="0.2689969604863222" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
