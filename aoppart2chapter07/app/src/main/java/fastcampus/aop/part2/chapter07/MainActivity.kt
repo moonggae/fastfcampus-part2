@@ -3,10 +3,15 @@ package fastcampus.aop.part2.chapter07
 import android.Manifest
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
+import android.media.MediaPlayer.OnCompletionListener
 import android.media.MediaRecorder
-import androidx.appcompat.app.AppCompatActivity
+import android.media.audiofx.Visualizer
+import android.media.audiofx.Visualizer.MeasurementPeakRms
+import android.media.audiofx.Visualizer.OnDataCaptureListener
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import fastcampus.aop.part2.chapter07.databinding.ActivityMainBinding
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -81,7 +86,8 @@ class MainActivity : AppCompatActivity() {
         binding.resetButton.setOnClickListener {
             stopPlaying()
             state = State.BEFORE_RECORDING
-
+            binding.soundVisualizerView.clearVisualization()
+            binding.recordTimeTextView.clearCountTime()
         }
     }
 
@@ -100,6 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         recorder?.start()
         binding.soundVisualizerView.startVisualizing(false)
+        binding.recordTimeTextView.startCountUp()
         state = State.ON_RECORDING
     }
 
@@ -111,6 +118,7 @@ class MainActivity : AppCompatActivity() {
 
         recorder = null
         binding.soundVisualizerView.stopVisualizing()
+        binding.recordTimeTextView.stopCountUp()
         state = State.AFTER_RECORDING
     }
 
@@ -119,20 +127,33 @@ class MainActivity : AppCompatActivity() {
             setDataSource(recordingFilePath)
             prepare()
         }
+
+        player?.setOnCompletionListener {
+            stopPlaying()
+            state = State.AFTER_RECORDING
+        }
+
         player?.start()
         binding.soundVisualizerView.startVisualizing(true)
+        binding.recordTimeTextView.startCountUp()
         state = State.ON_PLAYING
     }
+
+
 
     private fun stopPlaying() {
         player?.release()
         player = null
         binding.soundVisualizerView.stopVisualizing()
+        binding.recordTimeTextView.stopCountUp()
         state = State.AFTER_RECORDING
     }
 
     companion object {
         private const val REQUEST_RECORD_AUDIO_PERMISSION = 201
     }
+
+
+
 }
 

@@ -151,3 +151,17 @@ data class 사용하기
 계산 기록 삭제하기
 
 ~~단 시간관계 상 정수형으로 한정하고, 몇 가지 기능을 배제하고, 연산자는 1회만 사용할 수 있음~~
+
+
+# Chapter06 - 뽀모도로 타이머
+- CountDownTimer
+- SoundPool
+- SeekBar 
+
+
+
+# Chapter07 - 녹음기
+- Request runtime permissions
+- CustomView
+- MediaRecorder
+- MediaPlayer
