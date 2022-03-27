@@ -165,3 +165,8 @@ data class 사용하기
 - CustomView
 - MediaRecorder
 - MediaPlayer
+
+
+# Chapter08 - 심플 웹 브라우저
+- EditText
+- WebView
